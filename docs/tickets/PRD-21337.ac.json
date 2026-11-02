@@ -1,0 +1,178 @@
+[
+  {
+    "id": "TC1",
+    "ac": "AC1",
+    "text": "Given valid credential headers, When netsuite_list_record_types is called, Then it returns the mocked record-type catalog (name + link) verbatim",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_list_record_types_returns_catalog"]
+  },
+  {
+    "id": "TC2",
+    "ac": "AC2",
+    "text": "Given a record type, When netsuite_get_record_schema is called, Then it returns the mocked JSON Schema field list (name/type/required) for that type",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_get_record_schema_returns_fields"]
+  },
+  {
+    "id": "TC3",
+    "ac": "AC3",
+    "text": "Given a record type, When netsuite_list_records is called, Then it paginates ids with a default limit of 50 and a hard cap of 200",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_list_records_default_and_cap_limit"]
+  },
+  {
+    "id": "TC4",
+    "ac": "AC3",
+    "text": "Given a record type and a result set larger than the page cap, When netsuite_list_records is called, Then the response is truncated and has_more is true with the next offset",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_list_records_marks_has_more"]
+  },
+  {
+    "id": "TC5",
+    "ac": "AC4",
+    "text": "Given a record type and id, When netsuite_get_record is called, Then it returns the mocked full record body",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_get_record_returns_body"]
+  },
+  {
+    "id": "TC6",
+    "ac": "AC5",
+    "text": "Given a record type and an id that does not exist, When netsuite_get_record is called against a mocked 404, Then a structured not_found error is returned, not a raw passthrough",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_get_record_404_is_structured_not_found"]
+  },
+  {
+    "id": "TC7",
+    "ac": "AC6",
+    "text": "Given a record type and a valid field payload, When netsuite_create_record is called, Then it POSTs the payload and returns the new id/link parsed from the mocked Location header",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_create_record_returns_new_id"]
+  },
+  {
+    "id": "TC8",
+    "ac": "AC7",
+    "text": "Given invalid field values, When netsuite_create_record is called against a mocked 400 validation rejection, Then a structured invalid_argument error is returned, not a raw exception",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_create_record_validation_error_is_structured"]
+  },
+  {
+    "id": "TC9",
+    "ac": "AC8",
+    "text": "Given a record type, id, and a partial field payload, When netsuite_update_record is called, Then it PATCHes only the given fields and returns the updated id",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_update_record_patches_only_given_fields"]
+  },
+  {
+    "id": "TC10",
+    "ac": "AC9",
+    "text": "Given a record type and id, When netsuite_delete_record is called without confirm:true, Then no DELETE call reaches NetSuite and the tool returns a confirmation-required result",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_delete_record_requires_confirm"]
+  },
+  {
+    "id": "TC11",
+    "ac": "AC10",
+    "text": "Given a record type and id, When netsuite_delete_record is called with confirm:true, Then the connector calls NetSuite's DELETE endpoint and returns success",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_delete_record_with_confirm_deletes"]
+  },
+  {
+    "id": "TC12",
+    "ac": "AC11",
+    "text": "Given a SELECT statement, When netsuite_run_suiteql is called, Then it POSTs {q, params} with header Prefer: transient to /query/v1/suiteql and returns the mocked rows plus offset/count/has_more",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_run_suiteql_posts_query_and_returns_rows"]
+  },
+  {
+    "id": "TC13",
+    "ac": "AC12",
+    "text": "Given a non-SELECT or malformed SuiteQL statement, When netsuite_run_suiteql is called against a mocked 400 rejection, Then a structured invalid_argument error is returned and the connector performs no SQL parsing of its own",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_run_suiteql_rejected_statement_is_structured"]
+  },
+  {
+    "id": "TC14",
+    "ac": "AC13",
+    "text": "Given a SuiteQL query whose mocked result exceeds the connector's per-page cap, When netsuite_run_suiteql is called, Then the response is truncated to the cap and has_more is true",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_run_suiteql_truncates_oversized_result"]
+  },
+  {
+    "id": "TC15",
+    "ac": "AC14",
+    "text": "Given a request missing any of the five required credential headers, When any tool is called, Then the server returns 401 listing the missing header names and no call reaches NetSuite",
+    "type": "auto",
+    "tests": ["tests/test_middleware.py::test_missing_any_required_header_returns_401_listing_names"]
+  },
+  {
+    "id": "TC16",
+    "ac": "AC15",
+    "text": "Given credentials NetSuite rejects, When any tool is called against a mocked 401/403, Then a structured unauthorized error is returned",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_netsuite_401_403_mapped_to_unauthorized"]
+  },
+  {
+    "id": "TC17",
+    "ac": "AC16",
+    "text": "Given NetSuite returns a 429 governance-limit rejection, When any tool is called, Then a structured rate_limited error with retryable:true is returned",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_netsuite_429_mapped_to_rate_limited"]
+  },
+  {
+    "id": "TC18",
+    "ac": "AC17",
+    "text": "Given two concurrent requests carrying two different credential sets, When both are handled concurrently, Then neither request's signed client or response ever reflects the other's account (ContextVar isolation, no module-level state)",
+    "type": "auto",
+    "tests": ["tests/test_middleware.py::test_concurrent_requests_do_not_share_credentials"]
+  },
+  {
+    "id": "TC19",
+    "ac": "AC14, AC15, AC16, AC17",
+    "text": "Given a valid credential set, When any tool triggers an outbound call, Then the Authorization header NetSuite would receive contains all required OAuth 1.0a components (oauth_consumer_key, oauth_token, oauth_signature_method=HMAC-SHA256, oauth_timestamp, oauth_nonce, oauth_signature, realm=account id) and differs between two calls (fresh nonce/timestamp each time)",
+    "type": "auto",
+    "tests": ["tests/test_api_client.py::test_oauth1_signature_header_shape_and_freshness"]
+  },
+  {
+    "id": "TC20",
+    "ac": "AC1, AC2, AC3, AC4",
+    "text": "Given a real NetSuite account's Token-Based Authentication credentials, When netsuite_list_record_types, netsuite_get_record_schema, netsuite_list_records and netsuite_get_record are called, Then the returned data matches what the NetSuite UI shows for the same account",
+    "type": "manual",
+    "steps": [
+      "Configure a real NetSuite account's five TBA credential headers (account id, consumer key/secret, token id/secret)",
+      "Call netsuite_list_record_types and confirm the account-id to subdomain transform (Open Question Q3) against this real account",
+      "Call netsuite_get_record_schema for a known record type (e.g. customer) and netsuite_list_records / netsuite_get_record for an existing record",
+      "Open the same record in the NetSuite UI"
+    ],
+    "expect": "The catalog, schema fields, and record body returned by the tools match the NetSuite UI's display for the same account/record",
+    "result": "untested",
+    "notes": "needs a real vendor account; no NetSuite credentials are configured in this pipeline's environment (SOP: not a blocker)"
+  },
+  {
+    "id": "TC21",
+    "ac": "AC6, AC8, AC9, AC10",
+    "text": "Given a real NetSuite sandbox account, When a record is created via netsuite_create_record, updated via netsuite_update_record, and then deleted via netsuite_delete_record with confirm:true, Then each change is reflected in the NetSuite UI and the record is gone afterward",
+    "type": "manual",
+    "steps": [
+      "Call netsuite_create_record on a disposable record type/sandbox account with a minimal valid payload",
+      "Confirm the new record in the NetSuite UI",
+      "Call netsuite_update_record to change one field, confirm in the UI",
+      "Call netsuite_delete_record with confirm:true, confirm the record no longer appears in the UI"
+    ],
+    "expect": "Record appears after create, reflects the update, and is gone after the confirmed delete",
+    "result": "untested",
+    "notes": "needs a real sandbox vendor account; write operations are deliberately not exercised against production NetSuite data; no credentials are configured in this pipeline's environment (SOP: not a blocker)"
+  },
+  {
+    "id": "TC22",
+    "ac": "AC11, AC12, AC13",
+    "text": "Given a real NetSuite account, When a SuiteQL SELECT is run via netsuite_run_suiteql, Then the rows match a saved search / SuiteAnalytics result for the same query",
+    "type": "manual",
+    "steps": [
+      "Call netsuite_run_suiteql with a simple SELECT against a known table (e.g. customer)",
+      "Compare the returned rows against the equivalent data shown in the NetSuite UI"
+    ],
+    "expect": "Rows match; a deliberately malformed query returns a structured error, not a crash",
+    "result": "untested",
+    "notes": "needs a real vendor account; no credentials are configured in this pipeline's environment (SOP: not a blocker)"
+  }
+]
